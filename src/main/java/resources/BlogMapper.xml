@@ -71,7 +71,7 @@
 <!--      <if test="content != null">and blog.content = #{content}</if>-->
 <!--    </where>-->
     <trim prefix="where" prefixOverrides="and | or">
-      <if test="id != null">blog.id = #{id}</if>
+      <if test="id != null">blog.id = ${id}</if>
       <if test="authorId != null">and blog.author_id = #{authorId}</if>
       <if test="content != null">and blog.content = #{content}</if>
     </trim>

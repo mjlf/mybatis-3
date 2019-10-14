@@ -39,8 +39,7 @@ public class TestFirst {
 //      authors.add(2);
 
       Blog blog = new Blog();
-      blog.setContent("哈哈");
-
+      blog.setId(1);
       System.out.println(mapper.getOtherBlogByCondition(blog).size());
     }
   }
