@@ -11,12 +11,14 @@
   </properties>
   
   <settings>
+    <!--启动驼峰转换， 如字段名 name_car 将会被转换为java bean 对应的 nameCar-->
     <setting name="mapUnderscoreToCamelCase" value="true"/>
+    <setting name="useGeneratedKeys" value="true"/>
   </settings>
 
   <!--别名， 用于避免代码冗余-->
   <typeAliases>
-<!--    <typeAlias alias="Blog" type="org.apache.ibatis.test.test1.entity.Blog"/>-->
+    <!--<typeAlias alias="Blog" type="org.apache.ibatis.test.test1.entity.Blog"/>-->
     <package name="org.apache.ibatis.test.test1.entity"/>
   </typeAliases>
 
@@ -41,5 +43,7 @@
 <!--  mappers 元素则是包含一组映射器（mapper），这些映射器的 XML 映射文件包含了 SQL 代码和映射定义信息-->
   <mappers>
     <mapper resource="BlogMapper.xml"/>
+    <mapper resource="AuthorMapper.xml"/>
+    <mapper resource="CommentMapper.xml"/>
   </mappers>
 </configuration>

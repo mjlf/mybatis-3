@@ -3,7 +3,120 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.ibatis.test.test1.mapper.BlogMapper">
-  <select id="selectBlog" resultType="Blog">
-    select * from Blog where id = #{id}
+
+  <resultMap id="blogResultMap" type="blog">
+    <id  property="id" column="id"></id>
+    <result property="authorId" column="author_id"/>
+    <result property="content" column="content"/>
+
+    <association property="author">
+      <id property="id" column="author_id"/>
+      <result property="authorName" column="author_name"/>
+    </association>
+
+    <collection property="comments" ofType="Comment">
+      <id property="id" column="comment_id"/>
+      <result property="blogId" column="comment_blog_id"></result>
+      <result property="authorId" column="comment_author_id"/>
+      <result property="content" column="comment_content"/>
+    </collection>
+  </resultMap>
+
+
+  <resultMap id="otherBlogResultMap" type="blog">
+    <id  property="id" column="id"></id>
+    <result property="authorId" column="author_id"/>
+    <result property="content" column="content"/>
+
+    <association property="author" column="author_id" select="getAuthor"></association>
+
+    <collection property="comments" ofType="Comment">
+      <id property="id" column="comment_id"/>
+      <result property="blogId" column="comment_blog_id"></result>
+      <result property="authorId" column="comment_author_id"/>
+      <result property="content" column="comment_content"/>
+    </collection>
+  </resultMap>
+
+  <resultMap id="allAuthor" type="author">
+    <id property="id" column="id"></id>
+    <result property="authorName" column="author_name"></result>
+  </resultMap>
+
+  <sql id="authorSelect">
+    SELECT id, author_name FROM author
+  </sql>
+
+  <select id="getAuthor" useCache="true" resultMap="allAuthor">
+    <include refid="authorSelect"></include> WHERE id = #{id};
   </select>
+
+  <select id="getOtherBlogById" resultMap="otherBlogResultMap">
+     SELECT blog.id, blog.author_id, blog.content, com.id as comment_id,
+     com.blog_id as comment_blog_id, com.author_id as comment_author_id, com.content as comment_content
+     FROM Blog blog LEFT JOIN comment com ON (blog.id = com.blog_id)
+     <where>
+       <if test="id != null">blog.id = #{id}</if>
+     </where>
+  </select>
+
+  <select id="getOtherBlogByCondition" resultMap="otherBlogResultMap" parameterType="blog">
+<!--    <bind name="pattern" value="'%' + _parameter.getTitle() + '%'" />-->
+    SELECT blog.id, blog.author_id, blog.content, com.id as comment_id,
+    com.blog_id as comment_blog_id, com.author_id as comment_author_id, com.content as comment_content
+    FROM Blog blog LEFT JOIN comment com ON (blog.id = com.blog_id)
+<!--    <where>-->
+<!--      <if test="id != null">blog.id = #{id}</if>-->
+<!--      <if test="authorId != null">and blog.author_id = #{authorId}</if>-->
+<!--      <if test="content != null">and blog.content = #{content}</if>-->
+<!--    </where>-->
+    <trim prefix="where" prefixOverrides="and | or">
+      <if test="id != null">blog.id = #{id}</if>
+      <if test="authorId != null">and blog.author_id = #{authorId}</if>
+      <if test="content != null">and blog.content = #{content}</if>
+    </trim>
+  </select>
+
+
+  <select id="getOtherBlogByAuthors" resultMap="otherBlogResultMap" parameterType="list">
+    SELECT blog.id, blog.author_id, blog.content, com.id as comment_id,
+    com.blog_id as comment_blog_id, com.author_id as comment_author_id, com.content as comment_content
+    FROM Blog blog LEFT JOIN comment com ON (blog.id = com.blog_id)
+    <where>
+      <if test="list != null">
+        blog.author_id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+      </if>
+    </where>
+  </select>
+
+
+  <sql id="selectBlog">
+    SELECT a.*, com.id as comment_id, com.blog_id as comment_blog_id, com.author_id as comment_author_id, com.content as comment_content FROM (
+      SELECT blog.id, blog.author_id, blog.content, auth.author_name FROM Blog blog LEFT JOIN author auth ON (blog.author_id = auth.id)
+    ) a LEFT JOIN comment com ON (a.id = com.blog_id)
+  </sql>
+
+  <insert id="saveBlog" parameterType="blog" keyColumn="id" useGeneratedKeys="true" keyProperty="id" flushCache="true">
+    INSERT INTO Blog(author_id, content) value ("#{authorId}, #{content}")
+  </insert>
+
+  <select id="getBlobById" resultMap="blogResultMap" useCache="true">
+    <include refid="selectBlog"></include> WHERE a.id = #{id};
+  </select>
+
+  <select id="getAllBlob" resultMap="blogResultMap" useCache="true">
+    <include refid="selectBlog"></include>
+  </select>
+
+  <update id="updateBlogById" parameterType="blog" flushCache="true">
+    UPDATE Blog
+    <set>
+      <if test="authorId != null">author_id = #{authorId}</if>
+      <if test="content != null">content = #{content}</if>
+    </set>
+    WHERE id =#{id};
+  </update>
 </mapper>
